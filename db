@@ -1,0 +1,18 @@
+db.products.insertOne(
+  {
+    _id: 4, name: "Rubber", price: 0.80,
+    reviews:
+    [
+        {
+            author: "Ashley",
+            rating: 5,
+            comment: "Best rubber ever!"
+        },
+        {
+            author: "Charles",
+            rating: 4,
+            comment: "It is ok"
+        }
+    ]
+  }
+)
