@@ -3,13 +3,14 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
+const mongoose = require("mongoose");
 var _ = require('lodash');
 const dailyJournal = [];
 
 
-const homeStartingContent = "Lacus vel facilisis volutpat est velit egestas dui id ornare. Semper auctor neque vitae tempus quam. Sit amet cursus sit amet dictum sit amet justo. Viverra tellus in hac habitasse. Imperdiet proin fermentum leo vel orci porta. Donec ultrices tincidunt arcu non sodales neque sodales ut. Mattis molestie a iaculis at erat pellentesque adipiscing. Magnis dis parturient montes nascetur ridiculus mus mauris vitae ultricies. Adipiscing elit ut aliquam purus sit amet luctus venenatis lectus. Ultrices vitae auctor eu augue ut lectus arcu bibendum at. Odio euismod lacinia at quis risus sed vulputate odio ut. Cursus mattis molestie a iaculis at erat pellentesque adipiscing.";
-const aboutStartingContent = "Hac habitasse platea dictumst vestibulum rhoncus est pellentesque. Dictumst vestibulum rhoncus est pellentesque elit ullamcorper. Non diam phasellus vestibulum lorem sed. Platea dictumst quisque sagittis purus sit. Egestas sed sed risus pretium quam vulputate dignissim suspendisse. Mauris in aliquam sem fringilla. Semper risus in hendrerit gravida rutrum quisque non tellus orci. Amet massa vitae tortor condimentum lacinia quis vel eros. Enim ut tellus elementum sagittis vitae. Mauris ultrices eros in cursus turpis massa tincidunt dui.";
-const contactStartingContent = "Scelerisque eleifend donec pretium vulputate sapien. Rhoncus urna neque viverra justo nec ultrices. Arcu dui vivamus arcu felis bibendum. Consectetur adipiscing elit duis tristique. Risus viverra adipiscing at in tellus integer feugiat. Sapien nec sagittis aliquam malesuada bibendum arcu vitae. Consequat interdum varius sit amet mattis. Iaculis nunc sed augue lacus. Interdum posuere lorem ipsum dolor sit amet consectetur adipiscing elit. Pulvinar elementum integer enim neque. Ultrices gravida dictum fusce ut placerat orci nulla. Mauris in aliquam sem fringilla ut morbi tincidunt. Tortor posuere ac ut consequat semper viverra nam libero.";
+const homeStartingContent = "Welcome to my dailyJournal. This is a simple web application made by Ashley Le through the instruction of Angela Yu from App Brewery Course. This web app is going to be updated for a newer version soon. Thank you for visiting and I hope you enjoy the experience through this website.";
+const aboutStartingContent = "My name is Ashley Le. I am a Computer Science major student. I enjoy the experience of making a product, especially producing an interface for user. I hope I can get better in the future.";
+const contactStartingContent = "You can contact me through my email: lediemhang87@gmail.com";
 
 const app = express();
 
@@ -18,9 +19,29 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static("public"));
 
+mongoose.connect('mongodb+srv://admin-ashley:behang@cluster0.6ivlj.mongodb.net/dailyJournal?retryWrites=true&w=majority', {useNewUrlParser: true, useUnifiedTopology: true });
+
+const postsSchema = {
+  title: String,
+  content: String
+}
+
+const Post = mongoose.model ("Post", postsSchema);
+
+const welcome = new Post({title: "Welcome to dailyJournal", content: "Create your own journal here"});
+const defaultPost = [welcome];
 
 app.get("/", function(req,res){
-  res.render("home", {homeContent: homeStartingContent, dailyJournalContent: dailyJournal});
+
+  Post.find({}, function(err, foundItems){
+  if (foundItems.length === 0)
+  {
+    Post.insertMany(defaultPost, function(err){})
+    res.render("home", {homeContent: homeStartingContent, dailyJournalContent: defaultPost});
+  } else {
+    res.render("home", {homeContent: homeStartingContent, dailyJournalContent: foundItems});
+  }
+})
 })
 
 app.get("/about", function(req,res){
@@ -36,33 +57,62 @@ app.get("/compose", function(req,res){
 })
 
 app.get("/post/:topic", function(req,res){
-  console.log(_.lowerCase(req.params.topic));
-  for (var i = 0; i < dailyJournal.length; i++)
-  {
-    if (_.lowerCase(req.params.topic) === _.lowerCase(dailyJournal[i].title))
+
+
+  Post.find({}, function(err, foundItems){
+    for (var i = 0; i < foundItems.length; i++)
     {
-      res.render("compose", {title: dailyJournal[i].title, content: dailyJournal[i].content })
-      break;
+      if (_.lowerCase(req.params.topic) === _.lowerCase(foundItems[i].title))
+      {
+        res.render("compose", {title: foundItems[i].title, content: foundItems[i].content })
+        break;
+      }
     }
-  }
+  })
 })
+
+app.post("/post/:topic", function(req,res){
+  res.redirect("/compose");
+})
+
 app.post("/compose", function(req,res){
 
   var post = {
     title: req.body.postTitle,
     content: req.body.postBody
   }
-
   if (post.title !== undefined && post.content !== undefined)
   {
-    dailyJournal.push(post);
-  }
+    const postTitle = req.body.postTitle;
+    const postContent = req.body.postBody;
 
-  console.log(dailyJournal);
+    const newPost = new Post({
+      title: postTitle,
+      content: postContent
+    })
+
+
+    newPost.save();
+    // res.redirect("/todolist");
+  }
+  // console.log(dailyJournal);
   res.redirect("/");
 })
 
+app.post("/", function(req,res){
+    const postTitle = req.body.posTitle;
 
-app.listen(3000, function() {
+    Post.remove({title: postTitle}, function(err) {
+    if (!err) {
+      console.log("Successfully remove" + postTitle);
+    }
+    else {
+      console.log(err);
+    }
+  });
+  res.redirect("/");
+})
+
+app.listen(process.env.PORT ||3000, function() {
   console.log("Server started on port 3000");
 });

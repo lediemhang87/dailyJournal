@@ -1,6 +1,35 @@
 <%- include("partials/header") -%>
 
-<h1> <%= title %> </h1>
-<p> <%= content %> </p>
+
+<div class="form-group">
+  <!-- <form class="" action="/" method="post">
+     <li> <input type="hidden" name="posTitle" value="<%=title%>"> </li>
+    <li> <button type="submit"> Delete journal </button></li>
+  </form> -->
+
+  <h1 style="width: 50%"> <%= title %> </h1>
+
+
+
+
+
+</div>
+<p style="width: 90%; font-size: 15px; text-align: justify; text-justify: inter-word;"> <%= content %> </p>
+<br>
+
+<form class="" action="/post/<%=title%>" method="post" style="width: 200px;  display: inline-block;">
+  <%if (title === "Welcome to dailyJournal")%>
+  <%{%>
+   <button type="submit" class="btn btn-dark" style="text-decoration: none"> Create new post </button>
+  <%}%>
+</form>
+
+<form class="" action="/" method="post" style="width: 200px; display: inline-block;">
+   <input type="hidden" name="posTitle" value="<%=title%>">
+   <button type="submit" class="btn btn-dark" > Delete journal </button>
+</form>
+
+
+
 
 <%- include("partials/footer") -%>
